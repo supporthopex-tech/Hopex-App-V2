@@ -72,6 +72,18 @@ export type ShipmentTimelineEvent = {
   createdAt: string;
 };
 
+export type ShipmentItem = {
+  id: string;
+  itemName: string;
+  description: string;
+  quantity: number;
+  weightKg: number;
+  volumeCbm: number;
+  declaredValue: number;
+  currency: string;
+  createdAt: string;
+};
+
 export type ShipmentRecord = {
   id: string;
   companyId: string;
@@ -107,6 +119,7 @@ export type ShipmentRecord = {
   notes: string;
   pricing: ShipmentPricingResult;
   documents: ShipmentDocument[];
+  items: ShipmentItem[];
   timeline: ShipmentTimelineEvent[];
   auditLogs: {
     id: string;

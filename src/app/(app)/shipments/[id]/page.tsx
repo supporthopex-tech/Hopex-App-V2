@@ -92,6 +92,25 @@ export default async function ShipmentDetailPage({
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Card>
+          <CardHeader><CardTitle>Shipment items</CardTitle><CardDescription>Itemized cargo captured for this shipment.</CardDescription></CardHeader>
+          <CardContent className="space-y-2">
+            {shipment.items.length ? shipment.items.map((item) => (
+              <div key={item.id} className="rounded-md border p-3 text-sm">
+                <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                  <p className="font-medium">{item.itemName}</p>
+                  <p className="text-muted-foreground">Qty {item.quantity}</p>
+                </div>
+                <p className="mt-1 text-muted-foreground">{item.description || "No description"}</p>
+                <div className="mt-2 grid gap-2 text-xs text-muted-foreground md:grid-cols-3">
+                  <span>{item.weightKg ? `${item.weightKg} kg` : "Weight -"}</span>
+                  <span>{item.volumeCbm ? `${item.volumeCbm} cbm` : "Volume -"}</span>
+                  <span>{item.declaredValue ? formatCurrency(item.declaredValue, item.currency || shipment.currency) : "Value -"}</span>
+                </div>
+              </div>
+            )) : <Empty text="No shipment items captured yet." />}
+          </CardContent>
+        </Card>
+        <Card>
           <CardHeader><CardTitle>Timeline</CardTitle><CardDescription>Customer-visible tracking milestones.</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             {shipment.timeline.map((event) => (

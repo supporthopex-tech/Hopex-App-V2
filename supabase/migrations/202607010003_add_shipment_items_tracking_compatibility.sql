@@ -74,7 +74,7 @@ create policy "shipment_items permission delete"
 on public.shipment_items
 for delete
 to authenticated
-using (public.user_has_permission(company_id, 'shipments.delete'));
+using (public.user_has_permission(company_id, 'shipments.edit') or public.user_has_permission(company_id, 'shipments.delete'));
 
 drop policy if exists "shipment_tracking permission select" on public.shipment_tracking;
 create policy "shipment_tracking permission select"

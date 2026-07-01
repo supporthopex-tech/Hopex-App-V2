@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ShipmentItemsFields } from "@/components/shipments/shipment-items-fields";
 import { supportedCurrencies } from "@/lib/currencies";
 import { supportedDestinations } from "@/lib/destinations";
 import { shipmentStatusLabels } from "@/lib/shipments/labels";
@@ -32,6 +33,10 @@ export function ShipmentEditForm({ shipment, staff }: { shipment: ShipmentRecord
         <Field label="Status"><Select name="status" defaultValue={shipment.status}>{shipmentStatuses.map((item) => <option key={item} value={item}>{shipmentStatusLabels[item]}</option>)}</Select></Field><Field label="Assigned staff"><Select name="assigned_staff_id" defaultValue={shipment.assignedStaffId ?? ""}><option value="">Unassigned</option>{staff.filter((item) => item.status === "active").map((item) => <option key={item.id} value={item.id}>{item.staffId} · {item.fullName}</option>)}</Select></Field>
         <Field label="Estimated delivery"><Input name="estimated_delivery" type="date" defaultValue={shipment.estimatedDelivery} /></Field><Field label="Actual delivery"><Input name="actual_delivery" type="date" defaultValue={shipment.actualDelivery ?? ""} /></Field><Field label="Assigned driver"><Input name="assigned_driver" defaultValue={shipment.assignedDriver} /></Field>
         <Field label="Cargo description" className="md:col-span-2"><Textarea name="cargo_description" defaultValue={shipment.cargoDescription} /></Field><Field label="Delivery notes" className="md:col-span-2"><Textarea name="delivery_notes" defaultValue={shipment.deliveryNotes} /></Field><Field label="Notes" className="md:col-span-2"><Textarea name="notes" defaultValue={shipment.notes} /></Field>
+        <div className="grid gap-2 md:col-span-2">
+          <Label>Shipment items</Label>
+          <ShipmentItemsFields currency={shipment.currency} items={shipment.items} />
+        </div>
         <Button className="md:w-fit">Save shipment changes</Button>
       </form>
     </CardContent></Card>

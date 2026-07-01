@@ -55,6 +55,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ trac
     route: shipment.route,
     estimatedDelivery: shipment.estimatedDelivery,
     actualDelivery: shipment.actualDelivery,
+    items: shipment.items.map((item) => ({
+      itemName: item.itemName,
+      description: item.description,
+      quantity: item.quantity,
+    })),
     timeline: shipment.timeline,
     deliveryConfirmation: shipment.actualDelivery ? { deliveredAt: shipment.actualDelivery, receiverName: shipment.receiverName } : null,
   });

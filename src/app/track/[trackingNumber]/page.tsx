@@ -41,6 +41,24 @@ export default async function PublicTrackingPage({
 
         <Card>
           <CardHeader>
+            <CardTitle>Shipment items</CardTitle>
+            <CardDescription>Cargo lines registered for this shipment.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {shipment.items.length ? shipment.items.map((item) => (
+              <div key={item.id} className="rounded-md border p-3">
+                <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                  <p className="font-medium">{item.itemName}</p>
+                  <p className="text-sm text-muted-foreground">Qty {item.quantity}</p>
+                </div>
+                {item.description ? <p className="mt-1 text-sm text-muted-foreground">{item.description}</p> : null}
+              </div>
+            )) : <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">No shipment items available.</div>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Timeline</CardTitle>
             <CardDescription>Customer-visible shipment milestones.</CardDescription>
           </CardHeader>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ShipmentItemsFields } from "@/components/shipments/shipment-items-fields";
 import { PricingPreview } from "@/components/shipments/pricing-preview";
 import { supportedCurrencies } from "@/lib/currencies";
 import { supportedDestinations } from "@/lib/destinations";
@@ -186,6 +187,16 @@ export function ShipmentForm({
             <Field label="Cost amount"><Input name="cost_amount" type="number" min="0" step="0.01" {...numeric("costAmount")} /></Field>
           </div>
           <PricingPreview input={pricing} currency={currency} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Shipment items</CardTitle>
+          <CardDescription>Itemized cargo lines for packing lists, labels, invoices, and customer tracking.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ShipmentItemsFields currency={currency} />
         </CardContent>
       </Card>
 

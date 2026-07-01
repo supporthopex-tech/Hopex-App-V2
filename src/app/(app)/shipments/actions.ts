@@ -17,15 +17,17 @@ type ActionState = {
   message: string;
 };
 
+type InsertBuilder = Promise<{ error: { message: string } | null }> & {
+  select: (columns?: string) => {
+    single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
+  };
+};
+
 type MutationClient = {
   rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
   from: (table: string) => {
     select: (columns?: string) => QueryBuilder;
-    insert: (payload: Record<string, unknown> | Record<string, unknown>[]) => {
-      select: (columns?: string) => {
-        single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
-      };
-    };
+    insert: (payload: Record<string, unknown> | Record<string, unknown>[]) => InsertBuilder;
     upsert: (payload: Record<string, unknown>, options?: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
     update: (payload: Record<string, unknown>) => {
       eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
@@ -59,6 +61,17 @@ type QueryBuilder = {
 function checked(formData: FormData, name: string) {
   return formData.get(name) === "on";
 }
+
+type ShipmentItemInput = {
+  item_name: string;
+  description: string | null;
+  quantity: number;
+  weight_kg: number | null;
+  volume_cbm: number | null;
+  declared_value: number | null;
+  currency: string;
+  metadata: Record<string, unknown>;
+};
 
 async function mutationClient() {
   return (await createClient()) as unknown as MutationClient;
@@ -157,10 +170,21 @@ export async function createShipment(_prevState: ActionState, formData: FormData
     created_by: tenant.user.id,
   };
 
+  let shipmentItems: ShipmentItemInput[];
+  try {
+    shipmentItems = readShipmentItems(formData, payload.currency);
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Could not validate shipment items.",
+    };
+  }
+
   const { data, error } = await supabase.from("shipments").insert(payload).select("id").single();
   if (error || !data) return { ok: false, message: error?.message ?? "Could not create shipment." };
 
   const shipmentId = String(data.id);
+  await insertShipmentItems(supabase, tenant, shipmentId, shipmentItems);
   await supabase.from("shipment_pricing").insert({
     company_id: tenant.company.id,
     shipment_id: shipmentId,
@@ -418,6 +442,7 @@ export async function updateShipment(formData: FormData) {
   });
   const supabase = await mutationClient();
   const customerId = await ensureShipmentCustomer(supabase, tenant, formData);
+  const shipmentItems = readShipmentItems(formData, normalizeCurrency(formData.get("currency") ?? tenant.company.currency));
   const payload = {
     customer_id: customerId,
     customer_name: String(formData.get("customer_name") ?? ""), customer_phone: String(formData.get("customer_phone") ?? ""), customer_email: String(formData.get("customer_email") ?? ""), customer_destination: String(formData.get("customer_destination") ?? ""),
@@ -429,6 +454,7 @@ export async function updateShipment(formData: FormData) {
   const update = await supabase.from("shipments").update(payload).eq("id", shipmentId);
   if (update.error) throw new Error(update.error.message);
   await supabase.from("shipment_pricing").upsert({ company_id: tenant.company.id, shipment_id: shipmentId, use_balance_weight: pricing.useBalanceWeight, use_pieces: pricing.usePieces, use_volume: pricing.useVolume, weight_kg: pricing.weightKg, pieces: pricing.pieces, volume_cbm: pricing.volumeCbm, length: pricing.length, width: pricing.width, height: pricing.height, volumetric_weight: pricing.volumetricWeight, chargeable_weight: pricing.chargeableWeight, rate_per_kg: pricing.ratePerKg, rate_per_cbm: pricing.ratePerCbm, rate_per_piece: pricing.ratePerPiece, handling_fee: pricing.handlingFee, customs_fee: pricing.customsFee, insurance_fee: pricing.insuranceFee, discount: pricing.discount, tax: pricing.tax, subtotal: pricing.subtotal, total_amount: pricing.totalAmount, cost_amount: pricing.costAmount, profit_margin: pricing.profitMargin, created_by: tenant.user.id }, { onConflict: "shipment_id" });
+  await replaceShipmentItems(supabase, tenant, shipmentId, shipmentItems);
   await logShipmentEvent(supabase, tenant, shipmentId, status, "Shipment details updated.");
   revalidatePath("/shipments");
   revalidatePath(`/shipments/${shipmentId}`);
@@ -437,6 +463,61 @@ export async function updateShipment(formData: FormData) {
 
 function shipmentStatusesInclude(status: string): status is ShipmentStatus {
   return ["pending", "received", "in_warehouse", "in_transit", "arrived", "out_for_delivery", "delivered", "cancelled"].includes(status);
+}
+
+function readShipmentItems(formData: FormData, currency: string): ShipmentItemInput[] {
+  const count = Math.min(50, Math.max(0, Number(formData.get("shipment_item_count") ?? 0)));
+  const items: ShipmentItemInput[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const itemName = String(formData.get(`shipment_item_name_${index}`) ?? "").trim();
+    const description = String(formData.get(`shipment_item_description_${index}`) ?? "").trim();
+    const quantity = Math.max(1, Math.trunc(numberFromForm(formData.get(`shipment_item_quantity_${index}`)) || 1));
+    const weightKg = numberFromForm(formData.get(`shipment_item_weight_kg_${index}`));
+    const volumeCbm = numberFromForm(formData.get(`shipment_item_volume_cbm_${index}`));
+    const declaredValue = numberFromForm(formData.get(`shipment_item_declared_value_${index}`));
+    const hasItemData = Boolean(itemName || description || weightKg || volumeCbm || declaredValue || quantity > 1);
+    if (!hasItemData) continue;
+    if (!itemName) throw new Error("Each shipment item needs an item name.");
+    items.push({
+      item_name: itemName,
+      description: description || null,
+      quantity,
+      weight_kg: weightKg || null,
+      volume_cbm: volumeCbm || null,
+      declared_value: declaredValue || null,
+      currency,
+      metadata: { lineNumber: index + 1 },
+    });
+  }
+  if (!items.length) throw new Error("Add at least one shipment item.");
+  return items;
+}
+
+async function insertShipmentItems(
+  supabase: MutationClient,
+  tenant: Awaited<ReturnType<typeof requireTenant>>,
+  shipmentId: string,
+  items: ShipmentItemInput[],
+) {
+  const payload = items.map((item) => ({
+    company_id: tenant.company.id,
+    shipment_id: shipmentId,
+    ...item,
+    created_by: tenant.user.id,
+  }));
+  const result = await supabase.from("shipment_items").insert(payload);
+  if (result.error) throw new Error(result.error.message);
+}
+
+async function replaceShipmentItems(
+  supabase: MutationClient,
+  tenant: Awaited<ReturnType<typeof requireTenant>>,
+  shipmentId: string,
+  items: ShipmentItemInput[],
+) {
+  const removeExisting = await supabase.from("shipment_items").delete().eq("shipment_id", shipmentId);
+  if (removeExisting.error) throw new Error(removeExisting.error.message);
+  await insertShipmentItems(supabase, tenant, shipmentId, items);
 }
 
 export async function generateShipmentQuote(formData: FormData) {

@@ -85,7 +85,7 @@ export async function getShipmentById(id: string) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.from("shipments").select("*, assigned_staff:staff!shipments_assigned_staff_id_fkey(full_name), shipment_status_logs(id,to_status,location,notes,public_note,created_at), shipment_documents(id,document_type,file_name,file_path,is_public,created_at)").eq("id", id).single();
+  const { data, error } = await supabase.from("shipments").select("*, assigned_staff:staff!shipments_assigned_staff_id_fkey(full_name), shipment_status_logs(id,to_status,location,notes,public_note,created_at), shipment_documents(id,document_type,file_name,file_path,is_public,created_at), shipment_items(id,item_name,description,quantity,weight_kg,volume_cbm,declared_value,currency,created_at)").eq("id", id).single();
   if (error) return null;
   return mapShipmentRow(data);
 }
@@ -105,7 +105,7 @@ export async function getPublicShipmentByTrackingNumber(trackingNumber: string) 
   }
   const { data, error } = await supabase
     .from("shipments")
-    .select("*, assigned_staff:staff!shipments_assigned_staff_id_fkey(full_name), shipment_status_logs(id,to_status,location,notes,public_note,created_at)")
+    .select("*, assigned_staff:staff!shipments_assigned_staff_id_fkey(full_name), shipment_status_logs(id,to_status,location,notes,public_note,created_at), shipment_items(id,item_name,description,quantity,weight_kg,volume_cbm,declared_value,currency,created_at)")
     .eq("company_id", getDeploymentCompanyId())
     .eq("tracking_number", decodeURIComponent(trackingNumber))
     .single();
@@ -121,6 +121,7 @@ function mapShipmentRow(row: Record<string, unknown>): ShipmentRecord {
   const assignedRow = Array.isArray(assigned) ? assigned[0] : assigned;
   const statusLogs = (row.shipment_status_logs as Record<string, unknown>[] | null | undefined) ?? [];
   const documents = (row.shipment_documents as Record<string, unknown>[] | null | undefined) ?? [];
+  const items = (row.shipment_items as Record<string, unknown>[] | null | undefined) ?? [];
   return {
     id: text("id"),
     companyId: text("company_id"),
@@ -180,6 +181,17 @@ function mapShipmentRow(row: Record<string, unknown>): ShipmentRecord {
       chargeableWeight: number("chargeable_weight"),
     },
     documents: documents.map((document) => ({ id: String(document.id), documentType: String(document.document_type ?? ""), fileName: String(document.file_name ?? ""), filePath: String(document.file_path ?? ""), isPublic: Boolean(document.is_public), createdAt: String(document.created_at ?? "") })),
+    items: items.map((item) => ({
+      id: String(item.id),
+      itemName: String(item.item_name ?? ""),
+      description: String(item.description ?? ""),
+      quantity: Number(item.quantity ?? 0),
+      weightKg: Number(item.weight_kg ?? 0),
+      volumeCbm: Number(item.volume_cbm ?? 0),
+      declaredValue: Number(item.declared_value ?? 0),
+      currency: String(item.currency ?? text("currency") ?? "USD"),
+      createdAt: String(item.created_at ?? ""),
+    })),
     timeline: statusLogs.toSorted((left, right) => String(left.created_at).localeCompare(String(right.created_at))).map((event) => ({ id: String(event.id), status: String(event.to_status ?? ""), title: String(event.to_status ?? "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()), location: String(event.location ?? ""), notes: String(event.notes ?? ""), publicNote: String(event.public_note ?? ""), createdAt: String(event.created_at ?? "") })),
     auditLogs: [],
     createdBy: row.created_by ? text("created_by") : null,
