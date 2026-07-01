@@ -17,11 +17,32 @@
 - Hopex company seed and initial system settings created.
 - Production business data remains unmigrated.
 
-## Current
+### Sprint 3A: Planning and Static Validation
+
+- Status: Completed.
+- Existing migration planning docs and dry-run scripts were completed and improved.
+- No production migration was executed.
+- No old production writes were performed.
+
+### Sprint 3B: Dry Run Execution
+
+- Status: Completed.
+- Read-only source and target aggregate inspection completed.
+- Source rows, schema shape, mappings, storage, auth readiness, duplicate checks, nullable checks, enum/status checks, and FK validation were reviewed.
+- Target transform rollback script was not executed because Sprint 3B explicitly disallowed inserting data into V2 and no reviewed staging export has been loaded.
 
 ### Sprint 3: Dry Run Migration
 
-Primary objective: prove the migration process using read-only source exports and staged target imports before touching production business migration.
+- Status: Completed.
+- Sprint 3A and Sprint 3B approved.
+- Dry-run planning, static validation, read-only database inspection, and CTO reports completed.
+- No final production business-data migration was executed.
+- No old production writes were performed.
+- No live domain was connected.
+
+## Current
+
+- Sprint 4 is next: production migration approval and execution planning.
 
 ## Blocked / Not Started
 

@@ -21,15 +21,17 @@ Status: Complete
 
 ## Sprint 3: Dry Run Migration
 
-Status: Current
+Status: Complete
 
-Goals:
+Completed:
 
-- Export old Hopex data in read-only mode.
-- Load sample/staged data into migration staging only.
-- Run idempotent migration scripts against the new database.
-- Validate counts, rejects, duplicate prevention, and rollback procedure.
-- Produce a dry-run report before any production migration.
+- Sprint 3A planning and static validation approved.
+- Sprint 3B read-only dry-run validation approved.
+- Source and target metadata inspected in safe read-only mode.
+- Mapping, schema, storage, auth, duplicate, nullable, enum/status, and FK validation reports produced.
+- No production migration was executed.
+- No old production writes were performed.
+- No live domain was connected.
 
 ## Future Sprints
 
