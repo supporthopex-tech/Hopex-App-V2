@@ -1,0 +1,1 @@
+-- Production-safe seed file intentionally contains no sample business data.
