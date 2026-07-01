@@ -42,7 +42,10 @@
 
 ## Current
 
-- Sprint 4 is next: production migration approval and execution planning.
+- Sprint 5 high priority readiness fixes are completed locally and pending approval to push.
+- Sprint 4 and Sprint 4B were completed and pushed to GitHub.
+- Sprint 5 completed permission alignment, auth provisioning preparation, email readiness documentation, central documents, standalone notifications, and functional global search.
+- `npm.cmd run lint` and `npm.cmd run build` passed after Sprint 5 fixes.
 
 ## Blocked / Not Started
 

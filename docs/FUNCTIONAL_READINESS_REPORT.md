@@ -230,3 +230,12 @@ npm.cmd run build
 ## Readiness Decision
 
 Sprint 4B is functionally ready for UAT, not final production launch. The application has broad CRUD/report/export/search/mobile coverage, but final readiness depends on resolving High permission alignment, verifying Auth users after migration/provisioning, validating Resend email delivery, and making product decisions on central Documents and Notifications workflows.
+
+## Sprint 5 Resolution Notes
+
+- `PERM-4B-001`: Fixed locally in Sprint 5. App permission checks now tolerate read/view and edit/update equivalents, while staff shortcut permissions and the role catalog use canonical V2 permission keys.
+- `AUTH-4B-001`: Prepared in Sprint 5. See `docs/AUTH_PROVISIONING_WORKFLOW.md`; no passwords are migrated and no production Auth writes were performed.
+- `EMAIL-4B-001`: Prepared in Sprint 5. See `docs/EMAIL_PRODUCTION_READINESS.md`; only variable names and sender requirements are documented.
+- `DOC-4B-001`: Fixed locally in Sprint 5 with a central `/documents` module over existing shipment, quote, and email attachment tables.
+- `NOTIFY-4B-001`: Fixed locally in Sprint 5 with a standalone `/notifications` inbox and read/unread/delete workflow.
+- `SEARCH-4B-001`: Fixed locally in Sprint 5 with functional `/search` results and wired app-shell/mobile search forms.

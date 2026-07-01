@@ -45,10 +45,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               )}
             </div>
           </div>
-          <div className="relative hidden flex-1 md:block">
+          <form action="/search" className="relative hidden flex-1 md:block">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="max-w-md pl-9" placeholder="Search shipments, quotes, customers..." />
-          </div>
+            <Input className="max-w-md pl-9" name="q" placeholder="Search shipments, quotes, customers..." />
+          </form>
           <div className="ml-auto flex min-w-0 items-center gap-2">
             {actions.map((action) => (
               <Button key={action.href} asChild variant="outline" size="sm" className="hidden xl:inline-flex">

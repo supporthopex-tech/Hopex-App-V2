@@ -58,12 +58,12 @@ export function MobileNav({ tenant }: { tenant: TenantContext }) {
               </Button>
             </div>
 
-            <div className="border-b p-3">
+            <form action="/search" className="border-b p-3" onSubmit={() => setOpen(false)}>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder="Search..." />
+                <Input className="pl-9" name="q" placeholder="Search..." />
               </div>
-            </div>
+            </form>
 
             <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
               {items.map((item) => {

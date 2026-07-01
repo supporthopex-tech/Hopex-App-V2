@@ -119,7 +119,19 @@ export async function requireAnyPermission(permissions: string[]): Promise<Tenan
 }
 
 export function hasPermission(tenant: TenantContext, permission: string) {
-  return tenant.user.permissions?.includes("*") || tenant.user.permissions?.includes(permission);
+  const permissions = tenant.user.permissions ?? [];
+  if (permissions.includes("*") || permissions.includes(permission)) return true;
+  return permissionAliases(permission).some((alias) => permissions.includes(alias));
+}
+
+function permissionAliases(permission: string) {
+  const [resource, action] = permission.split(".");
+  if (!resource || !action) return [];
+  if (action === "view") return [`${resource}.read`];
+  if (action === "read") return [`${resource}.view`];
+  if (action === "edit") return [`${resource}.update`];
+  if (action === "update") return [`${resource}.edit`];
+  return [];
 }
 
 function addPermissions(target: Set<string>, rows: PermissionRow[]) {
